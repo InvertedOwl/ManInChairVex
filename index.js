@@ -32,33 +32,37 @@ function sqliteToJson(tableName, callback) {
 }
 
 app.get('/data/:type', (req, res) => {
-    console.log(req.query.event.toLowerCase());
-    fetch("https://data.vexvia.dwabtech.com/api/v3/event/"+req.query.event.toLowerCase()+"?schema=212&since=0&timeout=100000").then((response) => {
-        response.text().then((text) => {
-            const type = req.params.type; // Access the variable part
-            db.run("BEGIN TRANSACTION");
-            db.run("DELETE FROM matches");
-            db.run("DELETE FROM rankings");
-            db.run("DELETE FROM stats");
-            db.run("DELETE FROM skills");            for (let i = 0; i < text.split(";").length; i++) {
-                db.run(text.split(";")[i], (err) => {
+    try {
+        console.log(req.query.event.toLowerCase());
+        fetch("https://data.vexvia.dwabtech.com/api/v3/event/"+req.query.event.toLowerCase()+"?schema=212&since=0&timeout=100000").then((response) => {
+            response.text().then((text) => {
+                const type = req.params.type; // Access the variable part
+                db.run("BEGIN TRANSACTION");
+                db.run("DELETE FROM matches");
+                db.run("DELETE FROM rankings");
+                db.run("DELETE FROM stats");
+                db.run("DELETE FROM skills");            for (let i = 0; i < text.split(";").length; i++) {
+                    db.run(text.split(";")[i], (err) => {
+                        if (err) {
+                            console.log(text.split(";")[i]);
+                        }
+                    });
+                }
+                db.run("COMMIT");
+                const tableName = type; // Update with your table name
+
+                sqliteToJson(tableName, (err, jsonData) => {
                     if (err) {
-                        console.log(text.split(";")[i]);
+                        res.status(500).send('Error reading database');
+                    } else {
+                        res.json(jsonData);
                     }
                 });
-            }
-            db.run("COMMIT");
-            const tableName = type; // Update with your table name
-
-            sqliteToJson(tableName, (err, jsonData) => {
-                if (err) {
-                    res.status(500).send('Error reading database');
-                } else {
-                    res.json(jsonData);
-                }
-            });
-        })
-    });  
+            })
+        });  
+    } catch (e) {
+        console.log(e);
+    }
     
     
 });
