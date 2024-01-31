@@ -32,6 +32,10 @@ function sqliteToJson(tableName, callback) {
 }
 
 app.get('/data/:type', (req, res) => {
+    if (req.query.event.toLowerCase() == "") {
+        res.sendStatus(200);
+        return;
+    }
     try {
         console.log(req.query.event.toLowerCase());
         fetch("https://data.vexvia.dwabtech.com/api/v3/event/"+req.query.event.toLowerCase()+"?schema=212&since=0&timeout=100000").then((response) => {
