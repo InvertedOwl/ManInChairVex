@@ -41,18 +41,19 @@ app.get('/data/:type', (req, res) => {
         fetch("https://data.vexvia.dwabtech.com/api/v3/event/"+req.query.event.toLowerCase()+"?schema=212&since=0&timeout=100000").then((response) => {
             response.text().then((text) => {
                 const type = req.params.type; // Access the variable part
-                db.run("BEGIN TRANSACTION");
-                db.run("DELETE FROM matches");
-                db.run("DELETE FROM rankings");
-                db.run("DELETE FROM stats");
-                db.run("DELETE FROM skills");            for (let i = 0; i < text.split(";").length; i++) {
+                db.run("BEGIN TRANSACTION", (err) => {console.log("Begin err " + err)});
+                db.run("DELETE FROM matches", (err) => {console.log("Matches err " + err)});
+                db.run("DELETE FROM rankings", (err) => {console.log("Rankings err " + err)});
+                db.run("DELETE FROM stats", (err) => {console.log("Stats err " + err)});
+                db.run("DELETE FROM skills", (err) => {console.log("Skills err " + err)});            
+                for (let i = 0; i < text.split(";").length; i++) {
                     db.run(text.split(";")[i], (err) => {
                         if (err) {
                             console.log(text.split(";")[i]);
                         }
                     });
                 }
-                db.run("COMMIT");
+                db.run("COMMIT", (err) => { console.log("Commit err " + err) });
                 const tableName = type; // Update with your table name
 
                 sqliteToJson(tableName, (err, jsonData) => {
